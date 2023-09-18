@@ -1,35 +1,29 @@
-let setup_width;
-let setup_height;
-let resized_width;
-let resized_height;
+let contentWidth;
+let contentHeight;
+let resizableWidth;
+let resizableHeight;
 
 function setup() {
-  // setCanvasContainer('canvas-goes-here', 500, 500);
   setCanvasContainer('canvas-goes-here', 1, 1, true);
   background('white');
-  // 최초 폭
-  setup_width = width;
-  // 최초 높이
-  setup_height = height;
+  contentWidth = width;
+  contentHeight = height;
 }
 
 function draw() {
-  // 특정시점의 폭
-  resized_width = width;
-  // 특정시점의 높이
-  resized_height = height;
+  resizableWidth = width;
+  resizableHeight = height;
 
-  // 스케일 비율 설정을 = 줄어든 폭 / 원래 폭으로 계산하고
-  let scale_ratio = resized_width / setup_width;
+  var scaleRatio = Math.min(
+    resizableWidth / contentWidth,
+    resizableHeight / contentHeight
+  );
 
-  // 몇 프로 줄어들었는지 비율이 나타나고 그 것이 스케일 값
-  scale(scale_ratio);
+  scale(scaleRatio);
 
   background('#FFF5DB');
   fill(255);
   rectMode(CORNER);
-
-  // ->> setup에서 얻은 width의 값을 가지고 비율을 줄이거나 넓힐 수 있는 scale 함수를 사용
 
   fill(255, 249, 234);
   triangle(500, 0, 500, 390, 0, 20);
