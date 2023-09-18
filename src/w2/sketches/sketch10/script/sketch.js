@@ -1,7 +1,5 @@
 let contentWidth;
 let contentHeight;
-let resizableWidth;
-let resizableHeight;
 
 function setup() {
   setCanvasContainer('canvas-goes-here', 1, 1, true);
@@ -11,10 +9,10 @@ function setup() {
 }
 
 function draw() {
-  resizableWidth = width;
-  resizableHeight = height;
+  let resizableWidth = width;
+  let resizableHeight = height;
 
-  var scaleRatio = Math.min(
+  let scaleRatio = Math.min(
     resizableWidth / contentWidth,
     resizableHeight / contentHeight
   );

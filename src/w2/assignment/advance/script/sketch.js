@@ -1,3 +1,26 @@
+// 방법 1 Math.min 사용
+
+// let contentWidth;
+// let contentHeight;
+
+// function setup() {
+//   setCanvasContainer('canvas-goes-here', 1, 1, true);
+//   background('white');
+//   contentWidth = width;
+//   contentHeight = height;
+// }
+
+// function draw() {
+//   let resizableWidth = width;
+//   let resizableHeight = height;
+
+//   let scaleRatio = Math.min(
+//     resizableWidth / contentWidth,
+//     resizableHeight / contentHeight
+//   );
+//   scale(scaleRatio);}
+
+// 방법 2
 let setup_width;
 let setup_height;
 let resized_width;
