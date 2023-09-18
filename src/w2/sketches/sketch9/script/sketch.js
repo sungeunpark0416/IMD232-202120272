@@ -1,10 +1,22 @@
+let setup_width;
+let setup_height;
+let resized_width;
+let resized_height;
+
 function setup() {
   // setCanvasContainer('canvas-goes-here', 500, 500);
   setCanvasContainer('canvas-goes-here', 1, 1, true);
   background('white');
+  setup_width = width;
+  setup_height = height;
 }
 
 function draw() {
+  resized_width = width;
+  resized_height = height;
+  let scale_ratio = resized_width / setup_width;
+  scale(scale_ratio);
+
   background('#FFF5DB');
   fill(255);
   rectMode(CORNER);
@@ -48,7 +60,7 @@ function draw() {
   rectMode(CORNER);
 
   fill('#E7002A');
-  rect(300, 330, 500, 30);
+  rect(300, 330, 500, 30, 8);
   fill('#D8B88A');
   rect(300, 350, 500, 30);
   fill('#D8B88A');

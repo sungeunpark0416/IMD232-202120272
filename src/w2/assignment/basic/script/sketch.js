@@ -1,16 +1,14 @@
 function setup() {
-  // setCanvasContainer('canvas-goes-here', 500, 500);
-  setCanvasContainer('canvas-goes-here', 1, 1, true);
+  setCanvasContainer('canvas-goes-here', 500, 500);
+  // setCanvasContainer('canvas-goes-here', 1, 1, true);
   background('white');
 }
 
 function draw() {
-  background('#FFF5DB');
+  background(255, 249, 234);
   fill(255);
   rectMode(CORNER);
 
-  fill(255, 249, 234);
-  triangle(500, 0, 500, 390, 0, 20);
   //   천장
   fill('#E4DFD0');
   rect(0, 0, 1000, 20);
@@ -22,10 +20,6 @@ function draw() {
   rect(0, 400, 1000, 100);
   fill('#AE9E94');
   rect(0, 485, 1000, 20);
-
-  // 카페트
-  fill('#3D6724');
-  ellipse(400, 455, 400, 100);
 
   //   창문
   rectMode(CENTER);
@@ -118,6 +112,4 @@ function draw() {
   rect(-20, 312, 90, 20, 8, 8);
   fill('#ffffff');
   rect(-20, 292, 90, 20, 8, 8);
-
-  noStroke();
 }
