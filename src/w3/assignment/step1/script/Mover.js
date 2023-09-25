@@ -3,7 +3,6 @@ class Mover {
     this.position = createVector(width / 2, height / 2);
     this.acceleration = createVector(0, 0);
     this.velocity = createVector(0, 0);
-    this.radius = 30;
   }
 
   update() {
@@ -59,14 +58,14 @@ class Mover {
     // 마우스에서 벡터 계산
     let vectorX = mouseX - this.position.x;
     let vectorY = mouseY - this.position.y;
-
+    3;
     // 움직이는 Mover
     fill('salmon');
     noStroke();
-    ellipse(this.position.x, this.position.y, this.radius * 2);
+    ellipse(this.position.x, this.position.y, 60);
 
     // 마우스에서 Mover
-    stroke(0);
+    stroke('blacks');
     line(
       this.position.x,
       this.position.y,
