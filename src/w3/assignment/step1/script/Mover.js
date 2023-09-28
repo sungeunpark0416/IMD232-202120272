@@ -37,6 +37,11 @@ class Mover {
   }
 
   show() {
+    // 움직이는 Mover
+    fill('salmon');
+    noStroke();
+    ellipse(this.position.x, this.position.y, 60);
+
     // 가속도 벡터
     stroke('blue');
     line(
@@ -59,10 +64,6 @@ class Mover {
     let vectorX = mouseX - this.position.x;
     let vectorY = mouseY - this.position.y;
     3;
-    // 움직이는 Mover
-    fill('salmon');
-    noStroke();
-    ellipse(this.position.x, this.position.y, 60);
 
     // 마우스에서 Mover
     stroke('blacks');

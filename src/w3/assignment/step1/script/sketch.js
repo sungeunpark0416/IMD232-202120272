@@ -8,7 +8,7 @@ function setup() {
 }
 
 function draw() {
-  background('white');
+  background('gray');
   Mover.update();
   Mover.checkEdges();
   Mover.show();
