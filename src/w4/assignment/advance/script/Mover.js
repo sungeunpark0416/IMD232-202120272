@@ -24,22 +24,6 @@ class Mover {
     this.acc.mult(0);
   }
 
-  // checkEdges() {
-  //   const bounceFactor = map(this.pos.y, 0, height - 1, 0.2, 1.0); // 위치에 따라 바운스 팩터 조절
-
-  //   if (this.pos.x < 0 + this.radius) {
-  //     this.pos.x = this.radius;
-  //     this.vel.x *= -bounceFactor;
-  //   } else if (this.pos.x > width - 1 - this.radius) {
-  //     this.pos.x = width - 1 - this.radius;
-  //     this.vel.x *= -bounceFactor;
-  //   }
-  //   if (this.pos.y > height - 1 - this.radius) {
-  //     this.pos.y = height - 1 - this.radius;
-  //     this.vel.y *= -bounceFactor;
-  //   }
-  // }
-
   edgeBounce() {
     const bounce = -0.7;
     if (this.pos.x < 0 + this.rad) {
