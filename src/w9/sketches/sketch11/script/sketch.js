@@ -11,6 +11,7 @@ const {
   Mouse,
   Bodies,
   Vertices,
+  Common,
 } = Matter;
 
 const originalWidth = 800;
@@ -23,14 +24,17 @@ let ropeC;
 let group;
 
 // 엔진 생성
-var engine = Engine.create(),
-  world = engine.world;
+const engine = Engine.create();
+const world = engine.world;
 
 // runner 생성, 엔진이 계속해서 업데이트 되도록 실행
-var runner = Runner.create();
+const runner = Runner.create();
 
 let m;
 let mc;
+
+// Common 모듈의 setDecomp 메서드를 호출하여 decomp 라이브러리 설정
+Common.setDecomp(decomp);
 
 function setup() {
   setCanvasContainer('canvas', originalWidth, originalHeight, true);
@@ -39,10 +43,29 @@ function setup() {
   // 변수 할당 여기서
   group = Body.nextGroup(true);
 
-  ropeA = Composites.stack(100, 50, 8, 1, 10, 10, function (x, y) {
-    return Bodies.rectangle(x, y, 50, 20, {
+  // ropeA
+  // 새로운 모양 정의
+
+  // ropeA
+  ropeA = Composites.stack(100, 50, 1, 8, 10, 10, function (x, y) {
+    const arrow = Vertices.fromPath(
+      '50 0 37.5 25 50 70 12.5 25 0 25 12.5 12.5'
+    );
+    const chevron = Vertices.fromPath(
+      '50 0 40 20 50 40 30 40 20 20 0 20 10 10'
+    );
+    const star = Vertices.fromPath('0 -20 10 -30 20 -20 15 0 0 -10 -15 0');
+    const horseShoe = Vertices.fromPath(
+      '35 7 19 17 14 38 14 58 100 79 45 8 65 84 65 66 46 67 34 59 30 44 33 100 72 23 66 23 66 7 53 7'
+    );
+
+    const A = Vertices.fromPath('39 16 39 35 25 50 25 30 13 23 29 14');
+    const starVertices = Common.choose([arrow, chevron, star, horseShoe, A]);
+
+    const concaveBody = Bodies.fromVertices(x, y, starVertices, {
       collisionFilter: { group: group },
     });
+    return concaveBody;
   });
 
   // 제약 조건 - 상호 연결된 로프의 행동 시뮬레이트
@@ -51,6 +74,7 @@ function setup() {
     length: 2,
     render: { type: 'line' },
   });
+
   Composite.add(
     ropeA,
     Constraint.create({
@@ -61,7 +85,35 @@ function setup() {
     })
   );
 
-  // 중간 원 rope
+  // ropeA = Composites.stack(100, 50, 1, 5, 10, 10, function (x, y) {
+  //   const starVertices = Vertices.fromPath(
+  //     '50 0 37.5 25 50 50 12.5 25 0 25 12.5 12.5'
+  //   );
+
+  //   const concaveBody = Bodies.fromVertices(x, y, starVertices, {
+  //     collisionFilter: { group: group },
+  //   });
+  //   return concaveBody;
+  // });
+
+  // 제약 조건 - 상호 연결된 로프의 행동 시뮬레이트
+  Composites.chain(ropeA, 0.5, 0, -0.5, 0, {
+    stiffness: 0.8,
+    length: 2,
+    render: { type: 'line' },
+  });
+
+  Composite.add(
+    ropeA,
+    Constraint.create({
+      bodyB: ropeA.bodies[0],
+      pointB: { x: -25, y: 0 },
+      pointA: { x: ropeA.bodies[0].position.x, y: ropeA.bodies[0].position.y },
+      stiffness: 0.5,
+    })
+  );
+
+  // ropeB
   group = Body.nextGroup(true);
 
   ropeB = Composites.stack(350, 50, 10, 1, 10, 10, function (x, y) {
@@ -84,7 +136,7 @@ function setup() {
     })
   );
 
-  //
+  // ropeC
   group = Body.nextGroup(true);
 
   ropeC = Composites.stack(600, 50, 10, 1, 10, 10, function (x, y) {
@@ -136,9 +188,9 @@ function setup() {
 
   Composite.add(world, mc);
 
-  console.log('ropeA', ropeA);
-  console.log('ropeB', ropeB);
-  console.log('ropeC', ropeC);
+  // console.log('ropeA', ropeA);
+  // console.log('ropeB', ropeB);
+  // console.log('ropeC', ropeC);
 
   Runner.run(runner, engine);
   background('white');
@@ -152,14 +204,29 @@ function draw() {
   // ropeA
   fill('salmon');
   ropeA.bodies.forEach((eachBody) => {
-    beginShape();
-    eachBody.vertices.forEach((eachVertex) => {
-      vertex(
-        (eachVertex.x / originalWidth) * width,
-        (eachVertex.y / originalHeight) * height
-      );
-    });
-    endShape(CLOSE);
+    if (eachBody.parts.length === 1) {
+      // concave가 없는 경우 처리
+      beginShape();
+      eachBody.vertices.forEach((eachVertex) => {
+        vertex(
+          (eachVertex.x / originalWidth) * width,
+          (eachVertex.y / originalHeight) * height
+        );
+      });
+      endShape(CLOSE);
+    } else {
+      // concave가 있는 경우 처리
+      eachBody.parts.slice(1).forEach((part) => {
+        beginShape();
+        part.vertices.forEach((eachVertex) => {
+          vertex(
+            (eachVertex.x / originalWidth) * width,
+            (eachVertex.y / originalHeight) * height
+          );
+        });
+        endShape(CLOSE);
+      });
+    }
   });
 
   // ropeB

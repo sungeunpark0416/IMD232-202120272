@@ -1,3 +1,4 @@
+let canvas;
 let canvasContainerId;
 let canvasAspectRatio;
 let isCanvasFlexible;
@@ -12,7 +13,6 @@ const setCanvasContainer = (id, width, height, isFlexible = false) => {
     isCanvasFlexible = isFlexible;
   }
   const canvasContainer = select(`#${canvasContainerId}`);
-  let canvas;
   if (canvasAspectRatio === 0) {
     canvas = createCanvas(canvasContainer.width, canvasContainer.height);
   } else if (isFlexible) {

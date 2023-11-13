@@ -1,54 +1,128 @@
-const cNum = 8; //열
-const rNum = 8; //행
-let angleBegin = 0; //현재회전각도
-let angleBeginVel = 1; //각 프레임마다 더해지는 각도단위
-let angleStep = 15; // 각 열의 각도 간격
-const propellerLen = 25;
-let circleRadius = 10;
+var Engine = Matter.Engine,
+  Render = Matter.Render,
+  Runner = Matter.Runner,
+  Composites = Matter.Composites,
+  Events = Matter.Events,
+  Constraint = Matter.Constraint,
+  MouseConstraint = Matter.MouseConstraint,
+  Mouse = Matter.Mouse,
+  Body = Matter.Body,
+  Composite = Matter.Composite,
+  Bodies = Matter.Bodies;
+
+// create engine
+var engine = Engine.create(),
+  world = engine.world;
+
+// create runner
+var runner = Runner.create();
+
+let rock;
 
 function setup() {
-  setCanvasContainer('canvas', 1, 1, true);
-  angleMode(DEGREES); // 각도를 도 단위로 사용
-  colorMode(HSL, 360, 100, 100, 100);
-  background(360, 0, 100);
+  setCanvasContainer('canvas', 800, 600, true);
+
+  // add bodies
+  var ground = Bodies.rectangle(395, 600, 815, 50, {
+      isStatic: true,
+      render: { fillStyle: '#060a19' },
+    }),
+    rock = Bodies.polygon(170, 450, 8, 20, { density: 0.004 }),
+    anchor = { x: 170, y: 450 },
+    elastic = Constraint.create({
+      pointA: anchor,
+      bodyB: rock,
+      length: 0.01,
+      damping: 0.01,
+      stiffness: 0.05,
+    });
+
+  var pyramid = Composites.pyramid(500, 300, 9, 10, 0, 0, function (x, y) {
+    return Bodies.rectangle(x, y, 25, 40);
+  });
+
+  var ground2 = Bodies.rectangle(610, 250, 200, 20, {
+    isStatic: true,
+    render: { fillStyle: '#060a19' },
+  });
+
+  var pyramid2 = Composites.pyramid(550, 0, 5, 10, 0, 0, function (x, y) {
+    return Bodies.rectangle(x, y, 25, 40);
+  });
+
+  Composite.add(engine.world, [
+    ground,
+    pyramid,
+    ground2,
+    pyramid2,
+    rock,
+    elastic,
+  ]);
+
+  // add mouse control
+  var mouse = Mouse.create(document.querySelector('.p5Canvas'));
+  let mouseConstraint = MouseConstraint.create(engine, {
+    mouse: mouse,
+    constraint: {
+      stiffness: 0.2,
+      render: {
+        visible: false,
+      },
+    },
+  });
+
+  Composite.add(world, mouseConstraint);
+
+  Runner.run(runner, engine);
+  background('white');
 }
 
 function draw() {
-  background(360, 0, 100);
+  background('white');
 
-  let circleCount = 0;
-  for (let r = 0; r < rNum; r++) {
-    //행
-    for (let c = 0; c < cNum; c++) {
-      //열
-      push();
-      translate(((c + 0.5) * width) / cNum, ((r + 0.5) * height) / rNum); // 그리드 내에서 중심 위치 계산
-      rotate(angleBegin + circleCount * angleStep); // angleBegin, 열 번호, 및 행 번호를 고려하여 회전
-
-      drawGraphic();
-
-      pop();
-      circleCount++;
-      // console.log(circleCount);
-    }
-  }
-
-  angleBegin += angleBeginVel;
+  beginShape();
+  rock.endShape();
+  rock.vertices.forEach((each) => {
+    vertex(each);
+  });
+  endShape(CLOSE);
 }
 
-function drawGraphic() {
-  // 원 중앙에 프로펠러가 고정됩니다.
+// create renderer
+// const elem = document.querySelector('#canvas');
+// var render = Render.create({
+//   element: elem,
+//   engine: engine,
+//   options: {
+//     width: 800,
+//     height: 600,
+//     showAngleIndicator: true,
+//   },
+// });
+// Render.run(render);
 
-  ellipse(0, 0, 50);
+// Events.on(engine, 'afterUpdate', function () {
+//   if (
+//     mouseConstraint.mouse.button === -1 &&
+//     (rock.position.x > 190 || rock.position.y < 430)
+//   ) {
+//     // Limit maximum speed of current rock.
+//     if (Body.getSpeed(rock) > 45) {
+//       Body.setSpeed(rock, 45);
+//     }
 
-  stroke(0);
-  strokeWeight(1);
-  // 프로펠러의 line은 원 중앙에 고정됩니다.
-  let lineLength = circleRadius * 2;
-  line(0, 0, lineLength, 0);
+//     // Release current rock and add a new one.
+//     rock = Bodies.polygon(170, 450, 7, 20, rockOptions);
+//     Composite.add(engine.world, rock);
+//     elastic.bodyB = rock;
+//   }
+// });
 
-  strokeWeight(2);
-  // 원 중앙에서 거리를 두고 원을 그립니다.
-  fill('black');
-  circle(lineLength * 1.2, 0, 13);
-}
+// keep the mouse in sync with rendering
+// render.mouse = mouse;
+
+// fit the render viewport to the scene
+// Render.lookAt(render, {
+//   min: { x: 0, y: 0 },
+//   max: { x: 800, y: 600 },
+// });

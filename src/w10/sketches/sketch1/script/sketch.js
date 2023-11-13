@@ -1,27 +1,31 @@
-let angle = 0;
-let angleVel;
-const propellerLen = 100;
+let cells = [];
+
+const colNum = 10,
+  rowNum = colNum;
+
+let w, h;
 
 function setup() {
-  setCanvasContainer('canvas', 2, 1, true);
-  angleVel = (TAU / 360) * 1;
+  setCanvasContainer('canvas', 1, 1, true);
 
-  background(255);
+  w = width / colNum;
+  h = height / rowNum;
+
+  for (let row = 0; row < rowNum; row++) {
+    for (let col = 0; col < colNum; col++) {
+      const x = w * col;
+      const y = h * row;
+      let state = random() < 0.5;
+      cells.push(new Cell(x, y, w, h, state));
+    }
+  }
+
+  background('white');
 }
 
 function draw() {
-  background(255);
-
-  translate(width / 2, height / 2);
-  rotate(angle);
-
-  stroke(0);
-  strokeWeight(1);
-  fill(127);
-  line(-propellerLen / 2, 0, propellerLen / 2, 0);
-
-  strokeWeight(2);
-  fill(127);
-  circle(propellerLen / 2, 0, 16);
-  angle += angleVel;
+  background('white');
+  cells.forEach((eachCell) => {
+    eachCell.display();
+  });
 }

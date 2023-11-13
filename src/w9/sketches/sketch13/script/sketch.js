@@ -11,6 +11,7 @@ const {
   Mouse,
   Bodies,
   Vertices,
+  Common,
 } = Matter;
 
 const originalWidth = 800;
@@ -23,14 +24,17 @@ let ropeC;
 let group;
 
 // 엔진 생성
-var engine = Engine.create(),
-  world = engine.world;
+const engine = Engine.create();
+const world = engine.world;
 
 // runner 생성, 엔진이 계속해서 업데이트 되도록 실행
-var runner = Runner.create();
+const runner = Runner.create();
 
 let m;
 let mc;
+
+// Common 모듈의 setDecomp 메서드를 호출하여 decomp 라이브러리 설정
+Common.setDecomp(decomp);
 
 function setup() {
   setCanvasContainer('canvas', originalWidth, originalHeight, true);
@@ -39,10 +43,41 @@ function setup() {
   // 변수 할당 여기서
   group = Body.nextGroup(true);
 
-  ropeA = Composites.stack(100, 50, 8, 1, 10, 10, function (x, y) {
-    return Bodies.rectangle(x, y, 50, 20, {
+  // ropeA
+  ropeA = Composites.stack(100, 50, 1, 7, 10, 10, function (x, y) {
+    const concaveA = Vertices.fromPath(
+      '124 5 130 13 135 30 120 30 117 26 117 20 120 70'
+    );
+    const concaveB = Vertices.fromPath(
+      '125 34 132 36 140 44 125 45 110 55 110 43 120 40'
+    );
+    const concaveC = Vertices.fromPath(
+      '124 53 130 60 130 70 130 80 124 77 110 77 110 71 118 68'
+    );
+    const concaveD = Vertices.fromPath(
+      '135 86 140 93 130 97 125 100 110 100 110 93 120 88'
+    );
+    const concaveE = Vertices.fromPath('39 16 39 35 25 50 25 30 13 23 29 14');
+
+    const concaveF = Vertices.fromPath(
+      '123 106 128 113 140 117 135 127  119 112 120 117 110 108'
+    );
+
+    const concaveBodies = Common.choose([
+      concaveA,
+      concaveB,
+      concaveC,
+      concaveD,
+      concaveE,
+      concaveF,
+    ]);
+
+    const concaveBody = Bodies.fromVertices(x, y, concaveBodies, {
       collisionFilter: { group: group },
     });
+    const scale = 2;
+    Body.scale(concaveBody, scale, scale);
+    return concaveBody;
   });
 
   // 제약 조건 - 상호 연결된 로프의 행동 시뮬레이트
@@ -51,6 +86,7 @@ function setup() {
     length: 2,
     render: { type: 'line' },
   });
+
   Composite.add(
     ropeA,
     Constraint.create({
@@ -61,7 +97,24 @@ function setup() {
     })
   );
 
-  // 중간 원 rope
+  // 제약 조건 - 상호 연결된 로프의 행동 시뮬레이트
+  Composites.chain(ropeA, 0.5, 0, -0.5, 0, {
+    stiffness: 0.8,
+    length: 2,
+    render: { type: 'line' },
+  });
+
+  Composite.add(
+    ropeA,
+    Constraint.create({
+      bodyB: ropeA.bodies[0],
+      pointB: { x: -25, y: 0 },
+      pointA: { x: ropeA.bodies[0].position.x, y: ropeA.bodies[0].position.y },
+      stiffness: 0.5,
+    })
+  );
+
+  // ropeB
   group = Body.nextGroup(true);
 
   ropeB = Composites.stack(350, 50, 10, 1, 10, 10, function (x, y) {
@@ -84,7 +137,7 @@ function setup() {
     })
   );
 
-  //
+  // ropeC
   group = Body.nextGroup(true);
 
   ropeC = Composites.stack(600, 50, 10, 1, 10, 10, function (x, y) {
@@ -136,9 +189,9 @@ function setup() {
 
   Composite.add(world, mc);
 
-  console.log('ropeA', ropeA);
-  console.log('ropeB', ropeB);
-  console.log('ropeC', ropeC);
+  // console.log('ropeA', ropeA);
+  // console.log('ropeB', ropeB);
+  // console.log('ropeC', ropeC);
 
   Runner.run(runner, engine);
   background('white');
@@ -152,14 +205,29 @@ function draw() {
   // ropeA
   fill('salmon');
   ropeA.bodies.forEach((eachBody) => {
-    beginShape();
-    eachBody.vertices.forEach((eachVertex) => {
-      vertex(
-        (eachVertex.x / originalWidth) * width,
-        (eachVertex.y / originalHeight) * height
-      );
-    });
-    endShape(CLOSE);
+    if (eachBody.parts.length === 1) {
+      // concave가 없는 경우 처리
+      beginShape();
+      eachBody.vertices.forEach((eachVertex) => {
+        vertex(
+          (eachVertex.x / originalWidth) * width,
+          (eachVertex.y / originalHeight) * height
+        );
+      });
+      endShape(CLOSE);
+    } else {
+      // concave가 있는 경우 처리
+      eachBody.parts.slice(1).forEach((part) => {
+        beginShape();
+        part.vertices.forEach((eachVertex) => {
+          vertex(
+            (eachVertex.x / originalWidth) * width,
+            (eachVertex.y / originalHeight) * height
+          );
+        });
+        endShape(CLOSE);
+      });
+    }
   });
 
   // ropeB

@@ -1,49 +1,128 @@
-const cNum = 8;
-const rNum = 8;
-let angleBegin = 0;
-let angleBeginVel = 1; // 각도 증가 속도
-let angleStep;
-const propellerLen = 25;
-let circleRadius = 10;
+var Engine = Matter.Engine,
+  Render = Matter.Render,
+  Runner = Matter.Runner,
+  Body = Matter.Body,
+  Composite = Matter.Composite,
+  Composites = Matter.Composites,
+  Constraint = Matter.Constraint,
+  MouseConstraint = Matter.MouseConstraint,
+  Mouse = Matter.Mouse,
+  Bodies = Matter.Bodies;
 
-function setup() {
-  setCanvasContainer('canvas', 1, 1, true);
-  angleMode(DEGREES); // 각도를 도 단위로 사용
-  colorMode(HSL, 360, 100, 100, 100);
-  background(360, 0, 100);
+// create engine
+var engine = Engine.create(),
+  world = engine.world;
 
-  angleStep = 360 / cNum; // 한 그래픽당 회전 각도
-}
+// create renderer
+const elem = document.querySelector('#canvas');
 
-function draw() {
-  background(360, 0, 100);
+var render = Render.create({
+  element: elem,
+  engine: engine,
+  options: {
+    width: 800,
+    height: 600,
+    showAngleIndicator: true,
+    showCollisions: true,
+    showVelocity: true,
+  },
+});
 
-  for (let r = 0; r < rNum; r++) {
-    for (let c = 0; c < cNum; c++) {
-      push();
-      translate(((c + 0.5) * width) / cNum, ((r + 0.5) * height) / rNum); // 그리드 내에서 중심 위치 계산
-      rotate(angleBegin + c * angleStep); // 각도 회전
-      drawGraphic(); // 그래픽을 그리는 함수 호출
-      pop();
-    }
-  }
+Render.run(render);
 
-  angleBegin += angleBeginVel;
-}
+// create runner
+var runner = Runner.create();
+Runner.run(runner, engine);
 
-function drawGraphic() {
-  // 원 중앙에 프로펠러가 고정됩니다.
-  //   ellipse(0, 0, circleRadius * 2);
-  ellipse(0, 0, 50);
+// add bodies
+var group = Body.nextGroup(true);
 
-  stroke(0);
-  strokeWeight(1);
-  // 프로펠러의 line은 원 중앙에 고정됩니다.
-  let lineLength = circleRadius * 2;
-  line(0, 0, lineLength, 0);
-  strokeWeight(2);
-  //   circle(0, 0, 10);
-  strokeWeight(2);
-  fill('black');
-  circle(lineLength * 1.2, 0, 13);
-}
+var ropeA = Composites.stack(100, 50, 8, 1, 10, 10, function (x, y) {
+  return Bodies.rectangle(x, y, 50, 20, { collisionFilter: { group: group } });
+});
+
+Composites.chain(ropeA, 0.5, 0, -0.5, 0, {
+  stiffness: 0.8,
+  length: 2,
+  render: { type: 'line' },
+});
+Composite.add(
+  ropeA,
+  Constraint.create({
+    bodyB: ropeA.bodies[0],
+    pointB: { x: -25, y: 0 },
+    pointA: { x: ropeA.bodies[0].position.x, y: ropeA.bodies[0].position.y },
+    stiffness: 0.5,
+  })
+);
+
+group = Body.nextGroup(true);
+
+var ropeB = Composites.stack(350, 50, 10, 1, 10, 10, function (x, y) {
+  return Bodies.circle(x, y, 20, { collisionFilter: { group: group } });
+});
+
+Composites.chain(ropeB, 0.5, 0, -0.5, 0, {
+  stiffness: 0.8,
+  length: 2,
+  render: { type: 'line' },
+});
+Composite.add(
+  ropeB,
+  Constraint.create({
+    bodyB: ropeB.bodies[0],
+    pointB: { x: -20, y: 0 },
+    pointA: { x: ropeB.bodies[0].position.x, y: ropeB.bodies[0].position.y },
+    stiffness: 0.5,
+  })
+);
+
+group = Body.nextGroup(true);
+
+var ropeC = Composites.stack(600, 50, 13, 1, 10, 10, function (x, y) {
+  return Bodies.rectangle(x - 20, y, 50, 20, {
+    collisionFilter: { group: group },
+    chamfer: 5,
+  });
+});
+
+Composites.chain(ropeC, 0.3, 0, -0.3, 0, { stiffness: 1, length: 0 });
+Composite.add(
+  ropeC,
+  Constraint.create({
+    bodyB: ropeC.bodies[0],
+    pointB: { x: -20, y: 0 },
+    pointA: { x: ropeC.bodies[0].position.x, y: ropeC.bodies[0].position.y },
+    stiffness: 0.5,
+  })
+);
+
+Composite.add(world, [
+  ropeA,
+  ropeB,
+  ropeC,
+  Bodies.rectangle(400, 600, 1200, 50.5, { isStatic: true }),
+]);
+
+// add mouse control
+var mouse = Mouse.create(render.canvas),
+  mouseConstraint = MouseConstraint.create(engine, {
+    mouse: mouse,
+    constraint: {
+      stiffness: 0.2,
+      render: {
+        visible: false,
+      },
+    },
+  });
+
+Composite.add(world, mouseConstraint);
+
+// keep the mouse in sync with rendering
+render.mouse = mouse;
+
+// fit the render viewport to the scene
+Render.lookAt(render, {
+  min: { x: 0, y: 0 },
+  max: { x: 700, y: 600 },
+});

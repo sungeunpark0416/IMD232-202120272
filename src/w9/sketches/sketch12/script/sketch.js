@@ -11,6 +11,7 @@ const {
   Mouse,
   Bodies,
   Vertices,
+  Common,
 } = Matter;
 
 const originalWidth = 800;
@@ -23,14 +24,17 @@ let ropeC;
 let group;
 
 // 엔진 생성
-var engine = Engine.create(),
-  world = engine.world;
+const engine = Engine.create();
+const world = engine.world;
 
 // runner 생성, 엔진이 계속해서 업데이트 되도록 실행
-var runner = Runner.create();
+const runner = Runner.create();
 
 let m;
 let mc;
+
+// Common 모듈의 setDecomp 메서드를 호출하여 decomp 라이브러리 설정
+Common.setDecomp(decomp);
 
 function setup() {
   setCanvasContainer('canvas', originalWidth, originalHeight, true);
@@ -39,10 +43,17 @@ function setup() {
   // 변수 할당 여기서
   group = Body.nextGroup(true);
 
-  ropeA = Composites.stack(100, 50, 8, 1, 10, 10, function (x, y) {
-    return Bodies.rectangle(x, y, 50, 20, {
+  // ropeA
+  ropeA = Composites.stack(100, 50, 1, 10, 10, 10, function (x, y) {
+    const starVertices = Vertices.fromPath(
+      // '100 0 75 50 100 100 25 50 0 50 25 25'
+      '50 0 37.5 25 50 50 12.5 25 0 25 12.5 12.5'
+    );
+
+    const concaveBody = Bodies.fromVertices(x, y, starVertices, {
       collisionFilter: { group: group },
     });
+    return concaveBody;
   });
 
   // 제약 조건 - 상호 연결된 로프의 행동 시뮬레이트
@@ -51,6 +62,7 @@ function setup() {
     length: 2,
     render: { type: 'line' },
   });
+
   Composite.add(
     ropeA,
     Constraint.create({
@@ -61,7 +73,7 @@ function setup() {
     })
   );
 
-  // 중간 원 rope
+  // ropeB
   group = Body.nextGroup(true);
 
   ropeB = Composites.stack(350, 50, 10, 1, 10, 10, function (x, y) {
@@ -84,7 +96,7 @@ function setup() {
     })
   );
 
-  //
+  // ropeC
   group = Body.nextGroup(true);
 
   ropeC = Composites.stack(600, 50, 10, 1, 10, 10, function (x, y) {
@@ -136,9 +148,9 @@ function setup() {
 
   Composite.add(world, mc);
 
-  console.log('ropeA', ropeA);
-  console.log('ropeB', ropeB);
-  console.log('ropeC', ropeC);
+  // console.log('ropeA', ropeA);
+  // console.log('ropeB', ropeB);
+  // console.log('ropeC', ropeC);
 
   Runner.run(runner, engine);
   background('white');
@@ -152,14 +164,29 @@ function draw() {
   // ropeA
   fill('salmon');
   ropeA.bodies.forEach((eachBody) => {
-    beginShape();
-    eachBody.vertices.forEach((eachVertex) => {
-      vertex(
-        (eachVertex.x / originalWidth) * width,
-        (eachVertex.y / originalHeight) * height
-      );
-    });
-    endShape(CLOSE);
+    if (eachBody.parts.length === 1) {
+      // concave가 없는 경우 처리
+      beginShape();
+      eachBody.vertices.forEach((eachVertex) => {
+        vertex(
+          (eachVertex.x / originalWidth) * width,
+          (eachVertex.y / originalHeight) * height
+        );
+      });
+      endShape(CLOSE);
+    } else {
+      // concave가 있는 경우 처리
+      eachBody.parts.slice(1).forEach((part) => {
+        beginShape();
+        part.vertices.forEach((eachVertex) => {
+          vertex(
+            (eachVertex.x / originalWidth) * width,
+            (eachVertex.y / originalHeight) * height
+          );
+        });
+        endShape(CLOSE);
+      });
+    }
   });
 
   // ropeB
