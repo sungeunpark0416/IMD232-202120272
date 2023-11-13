@@ -11,6 +11,7 @@ const {
   Mouse,
   Bodies,
   Vertices,
+  common,
 } = Matter;
 
 const originalWidth = 800;
@@ -31,6 +32,8 @@ var runner = Runner.create();
 
 let m;
 let mc;
+
+Common.setDecomp(decomp);
 
 function setup() {
   setCanvasContainer('canvas', originalWidth, originalHeight, true);
