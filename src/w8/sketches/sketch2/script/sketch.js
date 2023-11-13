@@ -1,67 +1,111 @@
-// const cNum = 8;
-// const rNum = 8;
-// let gridC;
-// let gridR;
-// let angleBegin = 0;
-// let angleBeginVel;
-// let angleStep;
+var Engine = Matter.Engine,
+  Render = Matter.Render,
+  Runner = Matter.Runner,
+  Composites = Matter.Composites,
+  Events = Matter.Events,
+  Constraint = Matter.Constraint,
+  MouseConstraint = Matter.MouseConstraint,
+  Mouse = Matter.Mouse,
+  Body = Matter.Body,
+  Composite = Matter.Composite,
+  Bodies = Matter.Bodies;
 
-// function setup() {
-//   setCanvasContainer('canvas', 1, 1, true);
+// create engine
+var engine = Engine.create(),
+  world = engine.world;
 
-//   colorMode(HSL, 360, 100, 100, 100);
-//   background(360, 0, 100);
-// }
+// create renderer
+const elem = document.querySelector('#canvas');
+var render = Render.create({
+  element: elem,
+  engine: engine,
+  options: {
+    width: 800,
+    height: 600,
+    showAngleIndicator: true,
+  },
+});
 
-// function draw() {
-//   background(360, 0, 100);
+Render.run(render);
 
-//   for (let r = 0; r < rNum; r++) {
-//     for (let c = 0; c < cNum; c++) {
-//       push();
-//       translate();
-//       rotate();
-//       pop();
-//     }
-//   }
+// create runner
+var runner = Runner.create();
+Runner.run(runner, engine);
 
-//   angleBegin += angleBeginVel;
-// }
+// add bodies
+var ground = Bodies.rectangle(395, 600, 815, 50, {
+    isStatic: true,
+    render: { fillStyle: '#060a19' },
+  }),
+  rockOptions = { density: 0.004 },
+  rock = Bodies.polygon(170, 450, 8, 20, rockOptions),
+  anchor = { x: 170, y: 450 },
+  elastic = Constraint.create({
+    pointA: anchor,
+    bodyB: rock,
+    length: 0.01,
+    damping: 0.01,
+    stiffness: 0.05,
+  });
 
-const cNum = 8;
-const rNum = 8;
-let gridC;
-let gridR;
-let angleBegin = 0;
-let angleBeginVel = 1; // 각도 증가 속도
-let angleStep;
+var pyramid = Composites.pyramid(500, 300, 9, 10, 0, 0, function (x, y) {
+  return Bodies.rectangle(x, y, 25, 40);
+});
 
-function setup() {
-  setCanvasContainer('canvas', 1, 1, true);
-  angleMode(DEGREES); // 각도를 도 단위로 사용
-  colorMode(HSL, 360, 100, 100, 100);
-  background(360, 0, 100);
+var ground2 = Bodies.rectangle(610, 250, 200, 20, {
+  isStatic: true,
+  render: { fillStyle: '#060a19' },
+});
 
-  angleStep = 360 / cNum; // 한 그래픽당 회전 각도
-}
+var pyramid2 = Composites.pyramid(550, 0, 5, 10, 0, 0, function (x, y) {
+  return Bodies.rectangle(x, y, 25, 40);
+});
 
-function draw() {
-  background(360, 0, 100);
+Composite.add(engine.world, [
+  ground,
+  pyramid,
+  ground2,
+  pyramid2,
+  rock,
+  elastic,
+]);
 
-  for (let r = 0; r < rNum; r++) {
-    for (let c = 0; c < cNum; c++) {
-      push();
-      translate(((c + 0.5) * width) / cNum, ((r + 0.5) * height) / rNum); // 그리드 내에서 중심 위치 계산
-      rotate(angleBegin + c * angleStep); // 각도 회전
-      drawGraphic(); // 그래픽을 그리는 함수 호출
-      pop();
+Events.on(engine, 'afterUpdate', function () {
+  if (
+    mouseConstraint.mouse.button === -1 &&
+    (rock.position.x > 190 || rock.position.y < 430)
+  ) {
+    // Limit maximum speed of current rock.
+    if (Body.getSpeed(rock) > 45) {
+      Body.setSpeed(rock, 45);
     }
+
+    // Release current rock and add a new one.
+    rock = Bodies.polygon(170, 450, 7, 20, rockOptions);
+    Composite.add(engine.world, rock);
+    elastic.bodyB = rock;
   }
+});
 
-  angleBegin += angleBeginVel;
-}
+// add mouse control
+var mouse = Mouse.create(render.canvas),
+  mouseConstraint = MouseConstraint.create(engine, {
+    mouse: mouse,
+    constraint: {
+      stiffness: 0.2,
+      render: {
+        visible: false,
+      },
+    },
+  });
 
-function drawGraphic() {
-  //   fill(random(360), 80, 80); // 무작위 HSL 색상
-  ellipse(0, 0, 50);
-}
+Composite.add(world, mouseConstraint);
+
+// keep the mouse in sync with rendering
+render.mouse = mouse;
+
+// fit the render viewport to the scene
+Render.lookAt(render, {
+  min: { x: 0, y: 0 },
+  max: { x: 800, y: 600 },
+});
