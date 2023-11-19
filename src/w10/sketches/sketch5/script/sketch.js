@@ -1,58 +1,91 @@
-const cNum = 8;
-const rNum = 8;
-let angleBegin = 0;
-let angleBeginVel = 1;
-let angleStep = 15;
+const tiles = [];
+const rowNum = 50,
+  colNum = 50;
+
+const colorMapping = {
+  0: '#fff4el',
+  1: '#ffbba8',
+  2: '#fa8072',
+};
 
 function setup() {
   setCanvasContainer('canvas', 1, 1, true);
-  angleMode(DEGREES);
-  colorMode(HSL, 360, 100, 100, 100);
-  background(360, 0, 100);
+
+  const w = width / colNum;
+  const h = w;
+  for (let row = 0; row < rowNum; row++) {
+    for (let col = 0; col < colNum; col++) {
+      const x = w * col;
+      const y = h * row;
+      const newTile = new RPSCell(x, y, w, h);
+      tiles.push(newTile);
+    }
+  }
+  for (let row = 0; row < rowNum; row++) {
+    for (let col = 0; col < colNum; col++) {
+      const neighborsIdx = [
+        getIdx(row - 1, col - 1),
+        getIdx(row - 1, col),
+        getIdx(row - 1, col + 1),
+        getIdx(row, col + 1),
+        getIdx(row + 1, col + 1),
+        getIdx(row + 1, col),
+        getIdx(row + 1, col - 1),
+        getIdx(row, col - 1),
+      ];
+      if (col === 0) {
+        neighborsIdx[0] = -1;
+        neighborsIdx[6] = -1;
+        neighborsIdx[7] = -1;
+      } else if (col === colNum - 1) {
+        neighborsIdx[2] = -1;
+        neighborsIdx[3] = -1;
+        neighborsIdx[4] = -1;
+      }
+      if (row === 0) {
+        neighborsIdx[0] = -1;
+        neighborsIdx[1] = -1;
+        neighborsIdx[2] = -1;
+      } else if (row === rowNum - 1) {
+        neighborsIdx[4] = -1;
+        neighborsIdx[5] = -1;
+        neighborsIdx[6] = -1;
+      }
+      const neighbors = [];
+      neighborsIdx.forEach((eachIdx) => {
+        neighbors.push(eachIdx >= 0 ? tiles[eachIdx] : null);
+      });
+      const idx = getIdx(row, col);
+      tiles[idx].setNeighbors(neighbors);
+    }
+  }
+  randomSeed(1);
+  tiles.forEach((each) => {
+    each.state = Math.floor(random(3));
+  });
+
+  frameRate(15);
+  background(255);
+  // tiles.forEach((each) => {
+  //   each.display(mouseX, mouseY);
+  // });
 }
 
 function draw() {
-  background(360, 0, 100);
-  let angle = angleBegin;
+  background(255);
 
-  let circleCount = 1;
-  for (let r = 0; r < rNum; r++) {
-    for (let c = 0; c < cNum; c++) {
-      push();
-      translate(
-        ((c + 1) * width) / (cNum + 1),
-        ((r + 1) * height) / (rNum + 1)
-      );
-      rotate(angleBegin + circleCount * angleStep);
+  tiles.forEach((each) => {
+    each.calcNextState();
+  });
+  tiles.forEach((each) => {
+    each.update();
+  });
 
-      drawGraphic();
-      pop();
-      circleCount++;
-      // console.log(circleCount);
-
-      if (r % 2 == 0) {
-        if (c % 2 == 0) {
-          stroke('red');
-        } else {
-          stroke('yellow');
-        }
-      } else {
-        if (c % 2 == 0) {
-          stroke('blue');
-        } else {
-          stroke('green');
-        }
-      }
-    }
-  }
-  angleBegin += angleBeginVel;
+  tiles.forEach((each) => {
+    each.display(mouseX, mouseY);
+  });
 }
 
-function drawGraphic() {
-  ellipse(0, 0, 40);
-  stroke(0);
-  strokeWeight(1);
-  line(0, 0, 20, 0);
-  fill('black');
-  circle(20, 0, 10);
+function getIdx(row, col) {
+  return row * colNum + col;
 }

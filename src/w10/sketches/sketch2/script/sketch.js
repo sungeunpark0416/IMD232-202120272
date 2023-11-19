@@ -1,67 +1,99 @@
-// const cNum = 8;
-// const rNum = 8;
-// let gridC;
-// let gridR;
-// let angleBegin = 0;
-// let angleBeginVel;
-// let angleStep;
-
-// function setup() {
-//   setCanvasContainer('canvas', 1, 1, true);
-
-//   colorMode(HSL, 360, 100, 100, 100);
-//   background(360, 0, 100);
-// }
-
-// function draw() {
-//   background(360, 0, 100);
-
-//   for (let r = 0; r < rNum; r++) {
-//     for (let c = 0; c < cNum; c++) {
-//       push();
-//       translate();
-//       rotate();
-//       pop();
-//     }
-//   }
-
-//   angleBegin += angleBeginVel;
-// }
-
-const cNum = 8;
-const rNum = 8;
-let gridC;
-let gridR;
-let angleBegin = 0;
-let angleBeginVel = 1; // 각도 증가 속도
-let angleStep;
+const tiles = [];
+const rowNum = 50,
+  colNum = 50;
 
 function setup() {
   setCanvasContainer('canvas', 1, 1, true);
-  angleMode(DEGREES); // 각도를 도 단위로 사용
-  colorMode(HSL, 360, 100, 100, 100);
-  background(360, 0, 100);
 
-  angleStep = 360 / cNum; // 한 그래픽당 회전 각도
+  const w = width / colNum;
+  const h = w;
+  for (let row = 0; row < rowNum; row++) {
+    for (let col = 0; col < colNum; col++) {
+      const x = w * col;
+      const y = h * row;
+      const newTile = new Cell(x, y, w, h);
+      tiles.push(newTile);
+    }
+  }
+  for (let row = 0; row < rowNum; row++) {
+    for (let col = 0; col < colNum; col++) {
+      const neighborsIdx = [
+        getIdx(row - 1, col - 1),
+        getIdx(row - 1, col),
+        getIdx(row - 1, col + 1),
+        getIdx(row, col + 1),
+        getIdx(row + 1, col + 1),
+        getIdx(row + 1, col),
+        getIdx(row + 1, col - 1),
+        getIdx(row, col - 1),
+      ];
+      if (col === 0) {
+        neighborsIdx[0] = -1;
+        neighborsIdx[6] = -1;
+        neighborsIdx[7] = -1;
+      } else if (col === colNum - 1) {
+        neighborsIdx[2] = -1;
+        neighborsIdx[3] = -1;
+        neighborsIdx[4] = -1;
+      }
+      if (row === 0) {
+        neighborsIdx[0] = -1;
+        neighborsIdx[1] = -1;
+        neighborsIdx[2] = -1;
+      } else if (row === rowNum - 1) {
+        neighborsIdx[4] = -1;
+        neighborsIdx[5] = -1;
+        neighborsIdx[6] = -1;
+      }
+      const neighbors = [];
+      neighborsIdx.forEach((eachIdx) => {
+        neighbors.push(eachIdx >= 0 ? tiles[eachIdx] : null);
+      });
+      const idx = getIdx(row, col);
+      tiles[idx].setNeighbors(neighbors);
+    }
+  }
+  randomSeed(1);
+  tiles.forEach((each) => {
+    if (random() > 0.5) each.state = true;
+  });
+
+  frameRate(15);
+  background(255);
+  tiles.forEach((each) => {
+    each.display(mouseX, mouseY);
+  });
 }
 
 function draw() {
-  background(360, 0, 100);
+  background(255);
 
-  for (let r = 0; r < rNum; r++) {
-    for (let c = 0; c < cNum; c++) {
-      push();
-      translate(((c + 0.5) * width) / cNum, ((r + 0.5) * height) / rNum); // 그리드 내에서 중심 위치 계산
-      rotate(angleBegin + c * angleStep); // 각도 회전
-      drawGraphic(); // 그래픽을 그리는 함수 호출
-      pop();
-    }
-  }
+  tiles.forEach((each) => {
+    each.calcNextState();
+  });
+  tiles.forEach((each) => {
+    each.update();
+  });
 
-  angleBegin += angleBeginVel;
+  tiles.forEach((each) => {
+    each.display(mouseX, mouseY);
+  });
 }
 
-function drawGraphic() {
-  //   fill(random(360), 80, 80); // 무작위 HSL 색상
-  ellipse(0, 0, 50);
+function getIdx(row, col) {
+  return row * colNum + col;
+}
+
+function mouseClicked() {
+  for (let idx = 0; idx < tiles.length; idx++)
+    if (tiles[idx].toggleState(mouseX, mouseY)) break;
+}
+
+function keyPressed() {
+  // tiles.forEach((each) => {
+  //   each.calcNextState();
+  // });
+  // tiles.forEach((each) => {
+  //   each.update();
+  // });
 }
